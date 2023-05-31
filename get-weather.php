@@ -1,48 +1,41 @@
 <?php
 
-function get_weather_data($city_name, $api_key) {
-    $url = "http://api.openweathermap.org/data/2.5/weather?q=" . urlencode($city_name) . "&appid=" . $api_key;
-    $response = file_get_contents($url);
-    
-    if ($response !== false) {
-        $data = json_decode($response, true);
-        return $data;
-    } else {
-        echo "Error: Failed to fetch weather data.";
-        return null;
-    }
-}
+$latitude = 52.52;
+$longitude = 13.41;
 
-function get_temperature($city_data) {
-    if ($city_data) {
-        $main_info = $city_data['main'];
-        if ($main_info) {
-            $min_temp = $main_info['temp_min'];
-            $max_temp = $main_info['temp_max'];
-            return array($min_temp, $max_temp);
-        } else {
-            echo "Temperature data not available.";
-        }
-    } else {
-        echo "City data not available.";
-    }
-}
+$url = "https://api.open-meteo.com/v1/forecast?latitude={$latitude}&longitude={$longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,windspeed_10m";
 
-// Set your OpenWeatherMap API key here
-$api_key = 'your-api-key';
+$response = file_get_contents($url);
+$data = json_decode($response, true);
 
-// Set the city name for which you want to get the temperature data
-$city_name = 'London';
+// Extract current weather data
+$currentWeather = $data['current_weather'];
+$currentTemperature = $currentWeather['temperature'];
+$currentWeatherCode = $currentWeather['weathercode'];
+$currentWindSpeed = $currentWeather['windspeed'];
+$currentWindDirection = $currentWeather['winddirection'];
 
-// Get weather data
-$city_data = get_weather_data($city_name, $api_key);
+// Extract hourly weather data
+$hourlyData = $data['hourly'];
+$hourlyTime = $hourlyData['time'];
+$hourlyWindSpeed = $hourlyData['windspeed_10m'];
+$hourlyTemperature = $hourlyData['temperature_2m'];
+$hourlyRelativeHumidity = $hourlyData['relativehumidity_2m'];
 
-// Get the temperature
-list($min_temperature, $max_temperature) = get_temperature($city_data);
+// Print the extracted data
+echo "Current Weather:\n";
+echo "Time: {$currentWeather['time']}\n";
+echo "Temperature: {$currentTemperature}\n";
+echo "Weather Code: {$currentWeatherCode}\n";
+echo "Wind Speed: {$currentWindSpeed}\n";
+echo "Wind Direction: {$currentWindDirection}\n";
 
-if ($min_temperature && $max_temperature) {
-    echo "Minimum temperature in $city_name: $min_temperature°C<br>";
-    echo "Maximum temperature in $city_name: $max_temperature°C<br>";
+echo "\nHourly Weather:\n";
+for ($i = 0; $i < count($hourlyTime); $i++) {
+    echo "Time: {$hourlyTime[$i]}\n";
+    echo "Wind Speed: {$hourlyWindSpeed[$i]}\n";
+    echo "Temperature: {$hourlyTemperature[$i]}\n";
+    echo "Relative Humidity: {$hourlyRelativeHumidity[$i]}\n\n";
 }
 
 ?>
